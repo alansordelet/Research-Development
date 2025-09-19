@@ -27,14 +27,14 @@ Prototype that fakes long/short tunnels using a portal trigger, yaw remap (+180�
 
 🧩 How it works (matches this repo)
 PortalScript.cs 🔧 (C#)
-
+```
 Trigger gate: playerisOverlapping via OnTriggerEnter/Exit ("Player" tag)
 
 Plane crossing:
 dot = Vector3.Dot(transform.up, playerPos - transform.position) → teleport when dot < 0
-
+```
 Route selection:
-
+```
 InTunnelManager.instance.inTunnel == false → recieverInside
 
 true → recieverOutside
@@ -46,12 +46,13 @@ rotationdiff += 180f;
 playerPos.Rotate(Vector3.up, rotationdiff);
 
 
+
 Relative offset:
 
 Vector3 portalToPlayer = playerPos.position - transform.position;
 Vector3 positionOffset = Quaternion.Euler(0f, rotationdiff, 0f) * portalToPlayer;
 playerPos.position = receiver.position + positionOffset;
-
+```
 
 🛟 Safety clamp: if Distance(player, receiver) > 10f → snap to receiver
 
