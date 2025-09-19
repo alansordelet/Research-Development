@@ -61,15 +61,15 @@ playerPos.position = receiver.position + positionOffset;
 ✅ Diagonal/Vertical tunnels: rotate the portal and both receivers so their local axes match your tunnel direction. Same code path, no extras.
 
 InTunnelManager.cs 🗺️
-
+```
 Singleton (instance) with bool inTunnel
 
 Uses two colliders (colliderSmallTunnel, colliderBigTunnel) and bounds.Contains(player.position)
 
 Toggles tunnel mesh: bigTunnel.SetActive(...)
-
+```
 CameraDistortion.cs 🎥
-
+```
 UpdateDistortion(speed) → lerps FOV base → maxFOV, sets shader _DistortionAmount
 
 Built-in RP OnRenderImage post; for URP/HDRP use a Render Feature / Custom PP
@@ -81,7 +81,7 @@ Complex ops (+, −, ×, ÷, Abs())
 Möbius helpers, circle from 3 points, intersections
 
 Generates editable polygon points; scaling/mapping experiments (WIP)
-
+```
 🧠 Tips & Gotchas
 
 🎯 Align portal up to the plane normal (uses transform.up in dot test)
