@@ -10,7 +10,7 @@ Works for straight, diagonal, and vertical tunnel illusions via rotation. Includ
 ## ✨ Features
 
 - 🚪 Outside ↔ Inside teleports with overlap gate  
-- 🧭 Orientation continuity: yaw rotate + 180° flip  
+- 🧭 Orientation continuity  
 - 📐 3D variants: diagonal / vertical tunnels (rotate portal & receivers)  
 - 🎥 Camera FX: FOV + post-shader distortion scaled by speed  
 - 🎭 Stencil shading for controlled visibility and seamless transitions  
@@ -35,58 +35,17 @@ InTunnelManager.instance.inTunnel == false → receiverInside
 true → receiverOutside
 Yaw remap (+180°):
 
-  ```
-  ```
 float rotationDiff = -Quaternion.Angle(transform.rotation, receiver.rotation);
 rotationDiff += 180f;
 playerPos.Rotate(Vector3.up, rotationDiff);
 Relative offset:
 
-  ```
-  ```
 Vector3 portalToPlayer = playerPos.position - transform.position;
 Vector3 positionOffset = Quaternion.Euler(0f, rotationDiff, 0f) * portalToPlayer;
 playerPos.position = receiver.position + positionOffset;
   ```
-🛟 Safety clamp: if (Distance(player, receiver) > 10f) → snap to receiver
-
-📏 Portal normal: uses transform.up (align mesh/pivot accordingly)
-
-InTunnelManager.cs
-
-Singleton with bool inTunnel
-
-Uses two colliders (colliderSmallTunnel, colliderBigTunnel)
-
-Toggles tunnel mesh: bigTunnel.SetActive(...)
-
-CameraDistortion.cs
-
-UpdateDistortion(speed) → lerps FOV base → maxFOV, sets shader _DistortionAmount
-
-Built-in RP OnRenderImage post; for URP/HDRP use a Render Feature
-
-Complex.cs + HyperbolicTileMapGenerator.cs
-
-Complex ops (+, −, ×, ÷, Abs())
-
-Möbius helpers, circle from 3 points, intersections
-
-Generates editable polygon points for scaling/mapping experiments (WIP)
-
-🧠 Tips & Gotchas
-🎯 Align portal up to the plane normal (uses transform.up in dot test)
-
-🧲 Keep the trigger thin & centered to avoid immediate re-entry
-
-🧰 For vertical illusions, ensure receiver forward/up guide the post-warp facing
-
-🫥 Hide snaps with a corner, VFX puff, or camera curve after the seam
-
-🧱 Using Rigidbody? This demo doesn’t remap velocity; prefer CharacterController
 
 🐞 Known Limits
-🔁 Yaw-only (no pitch/roll remap)
 
 🕳️ No recursive views/mirrors (pure teleport + rotation)
 
