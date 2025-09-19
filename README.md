@@ -1,147 +1,62 @@
-🌀 Non-Euclidean Tunnel Demo (Unity)
+🧩 How it works — PortalScript.cs 🔧
 
+Goal: fake long/short tunnels by teleporting the player across a portal plane while keeping movement feeling continuous.
 
+🎯 Inputs
 
+playerPos → player root transform
 
+recieverInside / recieverOutside → anchors (yes, spelled like in code)
 
+InTunnelManager.instance.inTunnel → picks which receiver to use
 
+Portal plane normal = transform.up
 
+🚪 When it fires
 
+We watch overlap (playerisOverlapping) via OnTriggerEnter/Exit on "Player".
 
+Each LateUpdate we test the side of the plane:
+dot = Vector3.Dot(transform.up, playerPos.position - transform.position)
+👉 Teleport when dot < 0 (player crossed the portal plane).
 
-Prototype that fakes long/short tunnels using a portal trigger, yaw remap (+180°), and relative position. Works for straight, diagonal, and vertical tunnel illusions via rotation. Includes speed-based camera distortion and a hyperbolic geometry experiment.
+🧭 Which side to send you to
 
-⚠️ Demo, not a framework — minimal, self-contained, meant for learning.
+inTunnel == false → use recieverInside
 
-✨ Features
+inTunnel == true → use recieverOutside
 
-🚪 Outside ↔ Inside teleports with overlap gate
+🔄 Keep facing “forward” (yaw remap)
 
-🧭 Orientation continuity: yaw rotate + 180° flip
+We compute a yaw delta from entry → receiver and add a flip so the direction feels natural:
 
-📐 3D variants: diagonal / vertical tunnels (rotate portal & receivers)
+rotationdiff = -Quaternion.Angle(entry.rotation, receiver.rotation) + 180f
 
-🎥 Camera FX: FOV + post-shader distortion scaled by speed
+Apply: playerPos.Rotate(Vector3.up, rotationdiff)
 
-🧪 Hyperbolic lab: Poincaré-disc flavored experiments (Complex math, Möbius ops)
+📦 Keep your relative offset
 
-🧩 How it works (matches this repo)
-PortalScript.cs 🔧 (C#)
+We preserve your position relative to the portal, then re-express it at the receiver:
 
-Trigger gate: playerisOverlapping via OnTriggerEnter/Exit ("Player" tag)
+portalToPlayer = playerPos.position - entry.position
 
-Plane crossing:
-dot = Vector3.Dot(transform.up, playerPos - transform.position) → teleport when dot < 0
+positionOffset = Quaternion.Euler(0, rotationdiff, 0) * portalToPlayer
 
-Route selection:
+playerPos.position = receiver.position + positionOffset
 
-InTunnelManager.instance.inTunnel == false → recieverInside
+🛟 Safety clamp
 
-true → recieverOutside
+If the remap drifts too far:
+if (Distance(playerPos, receiver) > 10f) → snap to receiver.position
 
-Yaw remap (+180°):
+📐 Diagonal / vertical tunnels
 
-float rotationdiff = -Quaternion.Angle(transform.rotation, receiver.rotation);
-rotationdiff += 180f;
-playerPos.Rotate(Vector3.up, rotationdiff);
+Just rotate the portal and both receivers so their local axes match your tunnel direction. The same logic works—no extra code.
 
+🧠 TL;DR
 
-Relative offset:
+✅ Overlap ✔️ plane-cross (dot < 0) ✔️ pick receiver by inTunnel ✔️ yaw remap +180° ✔️ relative offset ✔️ clamp if > 10f.
 
-Vector3 portalToPlayer = playerPos.position - transform.position;
-Vector3 positionOffset = Quaternion.Euler(0f, rotationdiff, 0f) * portalToPlayer;
-playerPos.position = receiver.position + positionOffset;
+❗ Uses transform.up as the portal plane normal—align your mesh/pivot accordingly.
 
-
-🛟 Safety clamp: if Distance(player, receiver) > 10f → snap to receiver
-
-📏 Portal normal: uses transform.up (align your mesh/pivot accordingly)
-
-✅ Diagonal/Vertical tunnels: rotate the portal and both receivers so their local axes match your tunnel direction. Same code path, no extras.
-
-InTunnelManager.cs 🗺️
-
-Singleton (instance) with bool inTunnel
-
-Uses two colliders (colliderSmallTunnel, colliderBigTunnel) and bounds.Contains(player.position)
-
-Toggles tunnel mesh: bigTunnel.SetActive(...)
-
-CameraDistortion.cs 🎥
-
-UpdateDistortion(speed) → lerps FOV base → maxFOV, sets shader _DistortionAmount
-
-Built-in RP OnRenderImage post; for URP/HDRP use a Render Feature / Custom PP
-
-Complex.cs + HyperbolicTileMapGenerator.cs 🧪
-
-Complex ops (+, −, ×, ÷, Abs())
-
-Möbius helpers, circle from 3 points, intersections
-
-Generates editable polygon points; scaling/mapping experiments (WIP)
-
-🚀 Quick Start
-
-Portal
-
-Add a GameObject with Collider (IsTrigger) → attach PortalScript
-
-Assign:
-
-playerPos → player root / CharacterController
-
-recieverInside / recieverOutside → empty anchors (keep spelling from code)
-
-Tag player "Player"
-
-State
-
-Add InTunnelManager and assign colliderSmallTunnel, colliderBigTunnel, bigTunnel, player
-
-Camera FX (optional)
-
-Add CameraDistortion to the camera
-
-Provide a shader with float _DistortionAmount
-
-Call UpdateDistortion(speed) from your movement
-
-Hyperbolic demo (optional)
-
-Add HyperbolicTileMapGenerator, set tilePrefab / pointPrefab, tweak p, q, rotate_angle
-
-🗂️ Project Tree
-/Assets
-  /Scripts
-    PortalScript.cs
-    InTunnelManager.cs
-    CameraDistortion.cs
-    Complex.cs
-    HyperbolicTileMapGenerator.cs
-  /Shaders
-    Distortion.shader   // expects float _DistortionAmount
-  /Demo
-    Scene_Tunnel.unity  // optional showcase
-
-🧠 Tips & Gotchas
-
-🎯 Align portal up to the plane normal (uses transform.up in dot test)
-
-🧲 Keep the trigger thin & centered to avoid immediate re-entry
-
-🧰 For vertical illusions, ensure receiver forward/up guide the desired post-warp facing
-
-🫥 Hide snaps with a corner, light beat, VFX puff, or quick curve after the seam
-
-🧱 Using Rigidbody? This demo doesn’t remap velocity; prefer CharacterController here
-
-🐞 Known Limits
-
-🔁 Yaw-only (no pitch/roll remap)
-
-🕳️ No recursive views/mirrors (pure teleport + rotation)
-
-⏱️ No debounce timer (relies on overlap + thin trigger)
-
-🧮 Hyperbolic module is experimental (viz/prototype only)
+Bonus: See CameraDistortion.cs 🎥 for speed-based FOV & _DistortionAmount post, and the hyperbolic 🧪 experiment files for Poincaré-disc explorations.
