@@ -41,34 +41,40 @@ Stencil {
 
 This allowed the box to change visuals based on camera direction, faking an impossible object illusion.
 
-**PortalScript.cs**  
-- Trigger gate: `playerIsOverlapping` via `OnTriggerEnter/Exit ("Player" tag)`  
-- Plane crossing:  
-  ```
-  dot = Vector3.Dot(transform.up, playerPos - transform.position);
-  if (dot < 0) { /* teleport */ }
-    ```
-Route selection:
+### `PortalScript.cs`
 
-  ```
-InTunnelManager.instance.inTunnel == false → receiverInside
-true → receiverOutside
-  ```
+- **Trigger gate:** activates when the player enters/exits the portal trigger
   
-Yaw remap (+180°):
-```
+ ```
+playerIsOverlapping = true/false via OnTriggerEnter/Exit("Player");
+ ```
+Plane crossing check: determines when the player fully passes through the portal plane
+ ```
+float dot = Vector3.Dot(transform.up, player.position - transform.position);
+if (dot < 0) Teleport();
+ ```
+Non-Euclidean tunnel logic:
+Chooses whether the player is entering the long or short version of the tunnel.
+ ```
+if (!InTunnelManager.instance.inTunnel) 
+    receiver = receiverInside;   // tunnel feels shorter than outside
+else 
+    receiver = receiverOutside;  // tunnel feels longer than outside
+ ```
+Yaw remap (+180°): ensures orientation stays continuous after teleport
+ ```
 float rotationDiff = -Quaternion.Angle(transform.rotation, receiver.rotation);
 rotationDiff += 180f;
-playerPos.Rotate(Vector3.up, rotationDiff);
-  ```
- 
-Relative offset:
+player.Rotate(Vector3.up, rotationDiff);
  ```
-Vector3 portalToPlayer = playerPos.position - transform.position;
+Relative position offset: keeps player position consistent relative to the portal
+ ```
+Vector3 portalToPlayer = player.position - transform.position;
 Vector3 positionOffset = Quaternion.Euler(0f, rotationDiff, 0f) * portalToPlayer;
-playerPos.position = receiver.position + positionOffset;
-  ```
-📏 Portal normal: uses transform.up (align mesh/pivot accordingly)
+player.position = receiver.position + positionOffset;
+ ```
+
+📏 Portal normal: uses transform.up to decide crossing direction (align mesh pivot properly)
 
 🐞 Known Limits
 
