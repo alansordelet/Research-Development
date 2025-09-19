@@ -1,115 +1,147 @@
-🌀 Non-Euclidean Tunnels in Unity
+🌀 Non-Euclidean Tunnel Demo (Unity)
 
-Fake long ↔ short tunnels using clever rotation, relative transforms, and portal-like remapping—no custom render pipelines, no wizardry. Just neat math and scene tricks. 🎮✨
 
-👀 What is this?
 
-Create spaces that feel bigger (or smaller) than they are:
 
-🚪 Seamless tunnel loops (walk forever in 10 meters)
 
-🔁 Short-to-long swaps via rotation/offset
 
-🧭 Perspective cheats that preserve player orientation
 
-Use cases: puzzlers, liminal spaces, “impossible” labs, trippy dungeons.
 
-🧩 How it works (high level)
 
-Proxy Volumes: Entering a trigger re-positions the player relative to an exit anchor.
 
-Rotation Remap: We rotate the player by the delta between entry/exit anchors so forward keeps feeling “forward”.
+Prototype that fakes long/short tunnels using a portal trigger, yaw remap (+180°), and relative position. Works for straight, diagonal, and vertical tunnel illusions via rotation. Includes speed-based camera distortion and a hyperbolic geometry experiment.
 
-Distance Illusion: World chunks repeat or swap while maintaining continuous motion and sound.
+⚠️ Demo, not a framework — minimal, self-contained, meant for learning.
+
+✨ Features
+
+🚪 Outside ↔ Inside teleports with overlap gate
+
+🧭 Orientation continuity: yaw rotate + 180° flip
+
+📐 3D variants: diagonal / vertical tunnels (rotate portal & receivers)
+
+🎥 Camera FX: FOV + post-shader distortion scaled by speed
+
+🧪 Hyperbolic lab: Poincaré-disc flavored experiments (Complex math, Möbius ops)
+
+🧩 How it works (matches this repo)
+PortalScript.cs 🔧 (C#)
+
+Trigger gate: playerisOverlapping via OnTriggerEnter/Exit ("Player" tag)
+
+Plane crossing:
+dot = Vector3.Dot(transform.up, playerPos - transform.position) → teleport when dot < 0
+
+Route selection:
+
+InTunnelManager.instance.inTunnel == false → recieverInside
+
+true → recieverOutside
+
+Yaw remap (+180°):
+
+float rotationdiff = -Quaternion.Angle(transform.rotation, receiver.rotation);
+rotationdiff += 180f;
+playerPos.Rotate(Vector3.up, rotationdiff);
+
+
+Relative offset:
+
+Vector3 portalToPlayer = playerPos.position - transform.position;
+Vector3 positionOffset = Quaternion.Euler(0f, rotationdiff, 0f) * portalToPlayer;
+playerPos.position = receiver.position + positionOffset;
+
+
+🛟 Safety clamp: if Distance(player, receiver) > 10f → snap to receiver
+
+📏 Portal normal: uses transform.up (align your mesh/pivot accordingly)
+
+✅ Diagonal/Vertical tunnels: rotate the portal and both receivers so their local axes match your tunnel direction. Same code path, no extras.
+
+InTunnelManager.cs 🗺️
+
+Singleton (instance) with bool inTunnel
+
+Uses two colliders (colliderSmallTunnel, colliderBigTunnel) and bounds.Contains(player.position)
+
+Toggles tunnel mesh: bigTunnel.SetActive(...)
+
+CameraDistortion.cs 🎥
+
+UpdateDistortion(speed) → lerps FOV base → maxFOV, sets shader _DistortionAmount
+
+Built-in RP OnRenderImage post; for URP/HDRP use a Render Feature / Custom PP
+
+Complex.cs + HyperbolicTileMapGenerator.cs 🧪
+
+Complex ops (+, −, ×, ÷, Abs())
+
+Möbius helpers, circle from 3 points, intersections
+
+Generates editable polygon points; scaling/mapping experiments (WIP)
 
 🚀 Quick Start
 
-Open in Unity 2022+.
+Portal
 
-Drop TunnelPortal.prefab (has EntryAnchor + ExitAnchor + Trigger).
+Add a GameObject with Collider (IsTrigger) → attach PortalScript
 
-Assign your Player (or CharacterController) to PortalRemapper.
+Assign:
 
-Press Play → walk through the entry… and keep walking. 😈
+playerPos → player root / CharacterController
 
-📦 Folder Map
+recieverInside / recieverOutside → empty anchors (keep spelling from code)
+
+Tag player "Player"
+
+State
+
+Add InTunnelManager and assign colliderSmallTunnel, colliderBigTunnel, bigTunnel, player
+
+Camera FX (optional)
+
+Add CameraDistortion to the camera
+
+Provide a shader with float _DistortionAmount
+
+Call UpdateDistortion(speed) from your movement
+
+Hyperbolic demo (optional)
+
+Add HyperbolicTileMapGenerator, set tilePrefab / pointPrefab, tweak p, q, rotate_angle
+
+🗂️ Project Tree
 /Assets
-  /NonEuclid
-    /Prefabs
-      TunnelPortal.prefab
-    /Scripts
-      PortalRemapper.cs
-      RelativeWarp.cs
-    /Demo
-      Scene_Tunnel.unity
+  /Scripts
+    PortalScript.cs
+    InTunnelManager.cs
+    CameraDistortion.cs
+    Complex.cs
+    HyperbolicTileMapGenerator.cs
+  /Shaders
+    Distortion.shader   // expects float _DistortionAmount
+  /Demo
+    Scene_Tunnel.unity  // optional showcase
 
-🛠️ Core Scripts
+🧠 Tips & Gotchas
 
-PortalRemapper.cs – repositions & reorients the player when crossing the trigger.
+🎯 Align portal up to the plane normal (uses transform.up in dot test)
 
-using UnityEngine;
+🧲 Keep the trigger thin & centered to avoid immediate re-entry
 
-public class PortalRemapper : MonoBehaviour
-{
-    [SerializeField] Transform entryAnchor;   // where you enter
-    [SerializeField] Transform exitAnchor;    // where you appear
-    [SerializeField] Transform target;        // player root
+🧰 For vertical illusions, ensure receiver forward/up guide the desired post-warp facing
 
-    void OnTriggerEnter(Collider other)
-    {
-        if (other.transform != target) return;
+🫥 Hide snaps with a corner, light beat, VFX puff, or quick curve after the seam
 
-        // rotation delta (exit * inverse(entry))
-        Quaternion deltaRot = exitAnchor.rotation * Quaternion.Inverse(entryAnchor.rotation);
+🧱 Using Rigidbody? This demo doesn’t remap velocity; prefer CharacterController here
 
-        // position expressed relative to entry
-        Vector3 local = Quaternion.Inverse(entryAnchor.rotation) * (target.position - entryAnchor.position);
+🐞 Known Limits
 
-        // remap to exit space
-        Vector3 newWorldPos = exitAnchor.position + (deltaRot * local);
+🔁 Yaw-only (no pitch/roll remap)
 
-        // apply
-        target.rotation = deltaRot * target.rotation;
-        target.position  = newWorldPos;
-    }
-}
+🕳️ No recursive views/mirrors (pure teleport + rotation)
 
+⏱️ No debounce timer (relies on overlap + thin trigger)
 
-RelativeWarp.cs – optional “soft warp” to avoid a visible pop (lerps a few frames).
-
-using UnityEngine;
-using System.Collections;
-
-public class RelativeWarp : MonoBehaviour
-{
-    public IEnumerator SmoothWarp(Transform t, Vector3 toPos, Quaternion toRot, float time = 0.06f)
-    {
-        Vector3  fromP = t.position;  Quaternion fromR = t.rotation;
-        float a = 0f;
-        while (a < 1f)
-        {
-            a += Time.unscaledDeltaTime / time;
-            t.position = Vector3.Lerp(fromP, toPos, a);
-            t.rotation = Quaternion.Slerp(fromR, toRot, a);
-            yield return null;
-        }
-    }
-}
-
-🧠 Design Notes
-
-Keep entry/exit anchors aligned to the tunnel direction for natural movement.
-
-Hide swaps with lighting beats, SFX, or a tight curve.
-
-Use multiple portals to chain long loops (“infinite” corridor).
-
-Physics: remap root transform; child rigs/animators follow cleanly.
-
-⚠️ Limits / Gotchas
-
-Mirrors/true recursive views not included (this is transform trickery, not ray-traced portals).
-
-Networked play needs server-authoritative warps.
-
-NavMesh agents require off-mesh links at portals.
+🧮 Hyperbolic module is experimental (viz/prototype only)
