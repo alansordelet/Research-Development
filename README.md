@@ -1,7 +1,6 @@
-# 🌀 Non-Euclidean Tunnel Demo (Unity)
+# 🌀 Non-Euclidean Illusions Demo (Unity)
 
-Prototype that fakes long/short tunnels using a portal trigger, yaw remap (+180°), and relative position.  
-Works for straight, diagonal, and vertical tunnel illusions via rotation. Includes speed-based camera distortion, stencil shading tricks, a “magic box” visual effect, and a small hyperbolic geometry experiment.
+A Unity playground of impossible spaces — portal tunnels, magic box illusions, stencil shading tricks, speed-based camera warps, and hyperbolic geometry experiments.
 
 ⚠️ Demo, not a framework — minimal, self-contained, meant for learning.
 
@@ -9,13 +8,15 @@ Works for straight, diagonal, and vertical tunnel illusions via rotation. Includ
 
 ## ✨ Features
 
-- 🚪 Outside ↔ Inside teleports with overlap gate  
-- 🧭 Orientation continuity  
-- 📐 3D variants: diagonal / vertical tunnels (rotate portal & receivers)  
-- 🎥 Camera FX: FOV + post-shader distortion scaled by speed  
-- 🎭 Stencil shading for controlled visibility and seamless transitions  
-- 📦 “Magic Box” illusion — appearance changes depending on viewing angle  
-- 🧪 Hyperbolic lab: Poincaré-disc flavored experiments (Complex math, Möbius ops)  
+- 🚪 **Non-Euclidean tunnels:** outside size doesn’t match inside length  
+   - Looks long from outside → feels short once inside  
+   - Looks short from outside → feels unexpectedly long once inside  
+- 🧭 **Orientation continuity:** smooth yaw remap (+180°) for seamless entry/exit  
+- 📐 **3D variants:** supports straight, diagonal/vertical tunnel illusions by rotating portals & receivers  
+- 🎥 **Camera FX:** FOV + post-shader distortion scaled by speed  
+- 🎭 **Stencil shading:** controlled visibility for seamless transitions  
+- 📦 **“Magic Box” illusion:** object changes appearance depending on view direction  
+- 🧪 **Hyperbolic lab:** Poincaré-disc inspired experiments (complex math + Möbius transforms)  
 
 ---
 
