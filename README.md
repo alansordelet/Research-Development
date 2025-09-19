@@ -48,12 +48,12 @@ This allowed the box to change visuals based on camera direction, faking an impo
  ```
 playerIsOverlapping = true/false via OnTriggerEnter/Exit("Player");
  ```
-Plane crossing check: determines when the player fully passes through the portal plane
+- **Plane crossing check:** determines when the player fully passes through the portal plane
  ```
 float dot = Vector3.Dot(transform.up, player.position - transform.position);
 if (dot < 0) Teleport();
  ```
-Non-Euclidean tunnel logic:
+- **Non-Euclidean tunnel logic:**
 Chooses whether the player is entering the long or short version of the tunnel.
  ```
 if (!InTunnelManager.instance.inTunnel) 
@@ -61,13 +61,13 @@ if (!InTunnelManager.instance.inTunnel)
 else 
     receiver = receiverOutside;  // tunnel feels longer than outside
  ```
-Yaw remap (+180°): ensures orientation stays continuous after teleport
+- **Yaw remap (+180°):** ensures orientation stays continuous after teleport
  ```
 float rotationDiff = -Quaternion.Angle(transform.rotation, receiver.rotation);
 rotationDiff += 180f;
 player.Rotate(Vector3.up, rotationDiff);
  ```
-Relative position offset: keeps player position consistent relative to the portal
+- **Relative position offset:** keeps player position consistent relative to the portal
  ```
 Vector3 portalToPlayer = player.position - transform.position;
 Vector3 positionOffset = Quaternion.Euler(0f, rotationDiff, 0f) * portalToPlayer;
