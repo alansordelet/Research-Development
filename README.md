@@ -33,17 +33,44 @@ Route selection:
   ```
 InTunnelManager.instance.inTunnel == false → receiverInside
 true → receiverOutside
+  ```
+  
 Yaw remap (+180°):
-
+```
 float rotationDiff = -Quaternion.Angle(transform.rotation, receiver.rotation);
 rotationDiff += 180f;
 playerPos.Rotate(Vector3.up, rotationDiff);
+  ```
+ 
 Relative offset:
-
+ ```
 Vector3 portalToPlayer = playerPos.position - transform.position;
 Vector3 positionOffset = Quaternion.Euler(0f, rotationDiff, 0f) * portalToPlayer;
 playerPos.position = receiver.position + positionOffset;
   ```
+📏 Portal normal: uses transform.up (align mesh/pivot accordingly)
+
+🎭 Magic Box (Stencil Illusion)
+
+To create the “Magic Box” effect (different appearance depending on view side):
+
+Modified Unity’s Forward Rendering pipeline with a custom shader.
+
+Used the stencil buffer to mark geometry with reference values.
+
+Set different stencil tests (Comp Equal, Comp NotEqual) for front vs back facing.
+
+Depending on which side the player looks from, the box either shows or hides contents.
+
+Shader snippet (simplified):
+
+Stencil {
+    Ref 1             // Reference value
+    Comp Equal        // Only render if stencil == Ref
+    Pass Replace      // Replace stencil with Ref on pass
+}
+
+This allowed the box to change visuals based on camera direction, faking an impossible object illusion.
 
 🐞 Known Limits
 
